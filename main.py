@@ -393,20 +393,43 @@ class QQArchivePlugin(Star):
         return None, ""
 
     def _transcode_voice(self, path):
-        """QQ 语音是 amr/silk，多数客户端播不了，转成 mp3。失败就保留原文件。"""
+        """把 QQ 语音转成 mp3。失败就保留原文件。
+
+        注意：QQ 语音后缀常写 .amr，但真身多是 **SILK v3**（文件头 #!SILK_V3），
+        而 ffmpeg 没有 SILK 解码器。所以顺序是：
+          SILK -> pilk 解成 PCM -> ffmpeg 编成 mp3
+          普通 AMR -> 直接 ffmpeg
+        pilk 是可选的（requirements.txt 里声明）；没装就跳过，不影响其它功能。
+        """
         if not self.cfg.get("transcode_voice", True):
             return path
         if path.suffix.lower() not in (".amr", ".silk", ".slk"):
             return path
         mp3 = path.with_suffix(".mp3")
         try:
-            r = _sp.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), str(mp3)],
-                        capture_output=True, timeout=120)
+            with open(path, "rb") as fh:
+                head = fh.read(16)
+        except Exception:
+            return path
+        try:
+            if b"SILK" in head:
+                import pilk
+                pcm = path.with_suffix(".pcm")
+                pilk.decode(str(path), str(pcm))
+                r = _sp.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le",
+                             "-ar", "24000", "-ac", "1", "-i", str(pcm),
+                             "-b:a", "64k", str(mp3)], capture_output=True, timeout=120)
+                pcm.unlink(missing_ok=True)
+            else:
+                r = _sp.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), str(mp3)],
+                            capture_output=True, timeout=120)
             if r.returncode == 0 and mp3.is_file() and mp3.stat().st_size > 0:
                 path.unlink(missing_ok=True)
                 logger.info("[%s] 语音已转码 %s -> %s", PLUGIN, path.name, mp3.name)
                 return mp3
-            logger.warning("[%s] 转码失败，保留原文件：%s", PLUGIN, r.stderr[:200])
+            logger.warning("[%s] 转码失败，保留原文件：%s", PLUGIN, r.stderr[:150])
+        except ImportError:
+            logger.info("[%s] 未安装 pilk，跳过 SILK 语音转码（pip install pilk）", PLUGIN)
         except Exception:
             logger.warning("[%s] 转码异常，保留原文件：%s", PLUGIN, path, exc_info=True)
         return path
