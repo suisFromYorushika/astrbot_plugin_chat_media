@@ -24,6 +24,7 @@
     "type": "int",
     "default": 20000
   },
+  "transcode_voice": { "description": "语音落盘时自动把 amr/silk 转成 mp3（需要 ffmpeg）", "type": "bool", "default": true },
   "max_send_mb": { "description": "单个媒体发送大小上限（MB），超过就跳过", "type": "int", "default": 50 },
   "reply_on_send": {
     "description": "发图后是否附带一句文字说明",

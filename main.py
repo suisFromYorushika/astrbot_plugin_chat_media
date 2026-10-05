@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import sqlite3
+import subprocess as _sp
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -391,6 +392,25 @@ class QQArchivePlugin(Star):
                 return v, "local"
         return None, ""
 
+    def _transcode_voice(self, path):
+        """QQ 语音是 amr/silk，多数客户端播不了，转成 mp3。失败就保留原文件。"""
+        if not self.cfg.get("transcode_voice", True):
+            return path
+        if path.suffix.lower() not in (".amr", ".silk", ".slk"):
+            return path
+        mp3 = path.with_suffix(".mp3")
+        try:
+            r = _sp.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), str(mp3)],
+                        capture_output=True, timeout=120)
+            if r.returncode == 0 and mp3.is_file() and mp3.stat().st_size > 0:
+                path.unlink(missing_ok=True)
+                logger.info("[%s] 语音已转码 %s -> %s", PLUGIN, path.name, mp3.name)
+                return mp3
+            logger.warning("[%s] 转码失败，保留原文件：%s", PLUGIN, r.stderr[:200])
+        except Exception:
+            logger.warning("[%s] 转码异常，保留原文件：%s", PLUGIN, path, exc_info=True)
+        return path
+
     async def _store(self, src, mode, kind, day):
         ext_default = {"image": ".jpg", "video": ".mp4", "voice": ".amr", "file": ""}
         name = os.path.basename(src.split("?")[0]) or (kind + ext_default.get(kind, ""))
@@ -410,6 +430,8 @@ class QQArchivePlugin(Star):
                     if resp.status != 200:
                         return None
                     dst.write_bytes(await resp.read())
+        if kind == "voice":
+            dst = self._transcode_voice(dst)
         return str(dst)
 
     def _attach_media(self, event, saved):
