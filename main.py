@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""QQ 群聊归档助手。
+"""群聊历史与媒体助手。
 
 三件事：
 1. 给模型 query_group_history / list_history_images / send_history_image 三个工具，
