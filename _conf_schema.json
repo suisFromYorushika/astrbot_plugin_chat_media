@@ -1,0 +1,33 @@
+{
+  "db_path": {
+    "description": "AstrBot 数据库路径",
+    "type": "string",
+    "default": "/AstrBot/data/data_v4.db"
+  },
+  "archive_root": {
+    "description": "历史媒体根目录（_media 里的相对路径以此为基准）",
+    "type": "string",
+    "default": "/AstrBot/data/qqarchive"
+  },
+  "media_archive": {
+    "description": "新消息媒体落盘（图片/视频/语音/文件）",
+    "type": "bool",
+    "default": true
+  },
+  "media_dir": {
+    "description": "新媒体落盘目录",
+    "type": "string",
+    "default": "/AstrBot/data/qqarchive/media_new"
+  },
+  "max_scan_rows": {
+    "description": "单次检索最多扫描的历史行数",
+    "type": "int",
+    "default": 20000
+  },
+  "max_send_mb": { "description": "单个媒体发送大小上限（MB），超过就跳过", "type": "int", "default": 50 },
+  "reply_on_send": {
+    "description": "发图后是否附带一句文字说明",
+    "type": "bool",
+    "default": true
+  }
+}

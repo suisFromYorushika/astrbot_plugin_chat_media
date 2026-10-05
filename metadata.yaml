@@ -1,0 +1,14 @@
+name: astrbot_plugin_chat_media
+desc: 群聊历史与媒体助手 —— 让机器人按日期/时间/发言人/关键词检索**本群历史**，把指定的历史图片/视频/语音/文件发回群里；后台自动把新消息的媒体落盘。
+help: |
+  直接用自然语言 @ 机器人即可，例如：
+    「2024 年 3 月 17 号谁发过图片」
+    「把 2024-03-17 18:24 那张图发出来」
+    「2024 年 3 月你们聊了什么」
+  也可以走指令：
+    /群史 2024-03-17
+    /群史 2024-03 kumo
+    /发图 2024-03-17 18:24
+version: v1.0.0
+author: momo
+repo: https://github.com/suisFromYorushika/astrbot_plugin_chat_media
